@@ -1,8 +1,7 @@
 # Hipster Shop: Cloud-Native Microservices Demo Application
 
-This project contains a 10-tier microservices application. The application is a
-web-based e-commerce app called **“Hipster Shop”** where users can browse items,
-add them to the cart, and purchase them.
+This is a fork of the official Google Hipster Shop demo that replaces the Redis backend with a YugabyteDB. The application is a
+web-based e-commerce app called **“Hipster Shop”** where users can browse items, add them to the cart, and purchase them.
 
 **Google uses this application to demonstrate use of technologies like
 Kubernetes/GKE, Istio, Stackdriver, gRPC and OpenCensus**. This application
@@ -10,10 +9,6 @@ works on any Kubernetes cluster (such as a local one), as well as Google
 Kubernetes Engine. It’s **easy to deploy with little to no configuration**.
 
 If you’re using this demo, please **★Star** this repository to show your interest!
-
-> 👓**Note to Googlers:** Please fill out the form at
-> [go/microservices-demo](http://go/microservices-demo) if you are using this
-> application.
 
 ## Screenshots
 
@@ -34,7 +29,7 @@ Find **Protocol Buffers Descriptions** at the [`./pb` directory](./pb).
 | Service                                              | Language      | Description                                                                                                                       |
 | ---------------------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | [frontend](./src/frontend)                           | Go            | Exposes an HTTP server to serve the website. Does not require signup/login and generates session IDs for all users automatically. |
-| [cartservice](./src/cartservice)                     | C#            | Stores the items in the user's shopping cart in Redis and retrieves it.                                                           |
+| [cartservice](./src/cartservice)                     | C#            | Stores the items in the user's shopping cart in YugabyteDB and retrieves it.                                                           |
 | [productcatalogservice](./src/productcatalogservice) | Go            | Provides the list of products from a JSON file and ability to search products and get individual products.                        |
 | [currencyservice](./src/currencyservice)             | Node.js       | Converts one money amount to another currency. Uses real values fetched from European Central Bank. It's the highest QPS service. |
 | [paymentservice](./src/paymentservice)               | Node.js       | Charges the given credit card info (mock) with the given amount and returns a transaction ID.                                     |
@@ -52,7 +47,7 @@ Find **Protocol Buffers Descriptions** at the [`./pb` directory](./pb).
   Desktop", as well as on the cloud with GKE).
 - **[gRPC](https://grpc.io):** Microservices use a high volume of gRPC calls to
   communicate to each other.
-- **[Istio](https://istio.io):** Application works on Istio service mesh.
+- **[Istio](https://istio.io):** Application works on Istio service mesh *permissive mode only at this time with yugabyte.
 - **[OpenCensus](https://opencensus.io/) Tracing:** Most services are
   instrumented using OpenCensus trace interceptors for gRPC/HTTP.
 - **[Stackdriver APM](https://cloud.google.com/stackdriver/):** Many services
@@ -195,10 +190,11 @@ by deploying the [release manifest](./release) directly to an existing cluster.
    kubectl get service/frontend-external
    ```
 
-### (Optional) Deploying on a Istio-installed GKE cluster
+### (Work in Progress) Deploying on a Istio-installed GKE cluster
 
 > **Note:** you followed GKE deployment steps above, run `skaffold delete` first
-> to delete what's deployed.
+> to delete what's deployed. Enabling Istio-on-GKE sidecar injection may not allow
+> previous deployed versions to be re-deployed until it is disabled and removed.
 
 1. Create a GKE cluster (described in "Option 2").
 
@@ -262,17 +258,6 @@ If you've deployed the application with `kubectl apply -f [...]`, you can
 run `kubectl delete -f [...]` with the same argument to clean up the deployed
 resources.
 
-## Conferences featuring Hipster Shop
-
-- [Google Cloud Next'18 London – Keynote](https://youtu.be/nIq2pkNcfEI?t=3071)
-  showing Stackdriver Incident Response Management
-- Google Cloud Next'18 SF
-  - [Day 1 Keynote](https://youtu.be/vJ9OaAqfxo4?t=2416) showing GKE On-Prem
-  - [Day 3 – Keynote](https://youtu.be/JQPOPV_VH5w?t=815) showing Stackdriver
-    APM (Tracing, Code Search, Profiler, Google Cloud Build)
-  - [Introduction to Service Management with Istio](https://www.youtube.com/watch?v=wCJrdKdD6UM&feature=youtu.be&t=586)
-- [KubeCon EU 2019 - Reinventing Networking: A Deep Dive into Istio's Multicluster Gateways - Steve Dake, Independent](https://youtu.be/-t2BfT59zJA?t=982)
-
 ---
 
-This is not an official Google project.
+This is given as an example deployment of Yugabyte in a microservices environment.
