@@ -1,0 +1,30 @@
+global:
+  scrape_interval:     5s # Set the scrape interval to every 5 seconds. Default is every 1 minute.
+  evaluation_interval: 5s # Evaluate rules every 5 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+# YugaByte DB configuration to scrape Prometheus time-series metrics 
+scrape_configs:
+  - job_name: 'yugabytedb'
+    metrics_path: /prometheus-metrics
+
+    static_configs:
+      - targets: ['yb-master-0.yb-masters.yb-demo.svc.cluster.local:7000', 'yb-master-1.yb-masters.yb-demo.svc.cluster.local:7000', 'yb-master-2.yb-masters.yb-demo.svc.cluster.local:7000']
+        labels:
+          group: 'yb-master'
+
+      - targets: ['yb-tserver-0.yb-tservers.yb-demo.svc.cluster.local:9000', 'yb-tserver-1.yb-tservers.yb-demo.svc.cluster.local:9000', 'yb-tserver-2.yb-tservers.yb-demo.svc.cluster.local:9000']
+        labels:
+          group: 'yb-tserver'
+
+      - targets: ['yb-tserver-0.yb-tservers.yb-demo.svc.cluster.local:11000', 'yb-tserver-1.yb-tservers.yb-demo.svc.cluster.local:11000', 'yb-tserver-2.yb-tservers.yb-demo.svc.cluster.local:11000']
+        labels:
+          group: 'yedis'
+
+      - targets: ['yb-tserver-0.yb-tservers.yb-demo.svc.cluster.local:12000', 'yb-tserver-1.yb-tservers.yb-demo.svc.cluster.local:12000', 'yb-tserver-2.yb-tservers.yb-demo.svc.cluster.local:12000']
+        labels:
+          group: 'ycql'
+
+      - targets: ['yb-tserver-0.yb-tservers.yb-demo.svc.cluster.local:13000', 'yb-tserver-1.yb-tservers.yb-demo.svc.cluster.local:13000', 'yb-tserver-2.yb-tservers.yb-demo.svc.cluster.local:13000']
+        labels:
+          group: 'ysql'
