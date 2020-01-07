@@ -1,7 +1,8 @@
-FROM microsoft/dotnet:2.1-sdk-alpine as builder
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1-alpine3.10 as builder
 WORKDIR /app
 COPY . .
 RUN dotnet restore && \
+    dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL && \
     dotnet build && \
     dotnet publish -c release -r linux-musl-x64 -o /cartservice
 

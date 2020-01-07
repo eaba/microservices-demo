@@ -13,6 +13,8 @@
 // limitations under the License.
 
 ﻿using System;
+//npgsql added to test YBDB connectivity
+using Npgsql;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -89,6 +91,16 @@ namespace cartservice
 
         static void Main(string[] args)
         {
+            var connString = "Server=35.238.194.192;Port=5433;Database=sample;User Id=postgres;Password=postgres;";
+            var conn = new NpgsqlConnection {ConnectionString = connString};
+            conn.Open();
+            var sql = "INSERT INTO stock_market (stock_symbol,ts,current_price) VALUES ('AAPL','2017-10-26 10:00:00',157);";
+            var cmd = conn.CreateCommand();
+            cmd.CommandText = sql;
+            var count = cmd.ExecuteScalar();
+            Console.WriteLine("Count: " + count);
+            conn.Close();
+
             if (args.Length == 0)
             {
                 Console.WriteLine("Invalid number of arguments supplied");
@@ -143,7 +155,6 @@ namespace cartservice
                                 // If you want to start cart store using local cache in process, you can replace the following line with this:
                                 // cartStore = new LocalCartStore();
                                 cartStore = new RedisCartStore(redis);
-
                                 return StartServer(hostname, port, cartStore);
                             }
                             else
