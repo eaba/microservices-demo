@@ -92,14 +92,38 @@ namespace cartservice
         static void Main(string[] args)
         {
             var connString = "Server=35.238.194.192;Port=5433;Database=sample;User Id=postgres;Password=postgres;";
-            var conn = new NpgsqlConnection {ConnectionString = connString};
-            conn.Open();
-            var sql = "INSERT INTO stock_market (stock_symbol,ts,current_price) VALUES ('AAPL','2017-10-26 10:00:00',157);";
-            var cmd = conn.CreateCommand();
-            cmd.CommandText = sql;
-            var count = cmd.ExecuteScalar();
-            Console.WriteLine("Count: " + count);
-            conn.Close();
+            using (var conn = new NpgsqlConnection(connString))
+
+            {
+                Console.Out.WriteLine("Opening connection");
+                conn.Open();
+
+                using (var command = new NpgsqlCommand("DROP TABLE IF EXISTS orders", conn))
+                { 
+                    command.ExecuteNonQuery();
+                    Console.Out.WriteLine("Finished dropping table (if existed)");
+
+                }
+
+                using (var command = new NpgsqlCommand("CREATE TABLE orders(id serial PRIMARY KEY, name VARCHAR(50), quantity INTEGER)", conn))
+                {
+                    command.ExecuteNonQuery();
+                    Console.Out.WriteLine("Finished creating table");
+                }
+
+                using (var command = new NpgsqlCommand("INSERT INTO orders (name, quantity) VALUES (@n1, @q1), (@n2, @q2), (@n3, @q3)", conn))
+                {
+                    command.Parameters.AddWithValue("n1", "banana");
+                    command.Parameters.AddWithValue("q1", 150);
+                    command.Parameters.AddWithValue("n2", "orange");
+                    command.Parameters.AddWithValue("q2", 154);
+                    command.Parameters.AddWithValue("n3", "apple");
+                    command.Parameters.AddWithValue("q3", 100);
+                    
+                    int nRows = command.ExecuteNonQuery();
+                    Console.Out.WriteLine(String.Format("Number of rows inserted={0}", nRows));
+                }
+            }
 
             if (args.Length == 0)
             {
