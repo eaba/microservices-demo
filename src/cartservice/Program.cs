@@ -31,6 +31,12 @@ namespace cartservice
         const string CART_SERVICE_ADDRESS = "LISTEN_ADDR";
         const string REDIS_ADDRESS = "REDIS_ADDR";
         const string CART_SERVICE_PORT = "PORT";
+        // Build connection string using parameters from yaml
+        //private static string Host = "35.238.194.192";
+        private static string User = "postgres";
+        private static string DBname = "sample";
+        private static string Password = "postgres";
+        private static string Port = "5433";
 
         [Verb("start", HelpText = "Starts the server listening on provided port")]
         class ServerOptions
@@ -91,39 +97,6 @@ namespace cartservice
 
         static void Main(string[] args)
         {
-            var connString = "Server=35.238.194.192;Port=5433;Database=sample;User Id=postgres;Password=postgres;";
-            using (var conn = new NpgsqlConnection(connString))
-
-            {
-                Console.Out.WriteLine("Opening connection");
-                conn.Open();
-
-                using (var command = new NpgsqlCommand("DROP TABLE IF EXISTS orders", conn))
-                { 
-                    command.ExecuteNonQuery();
-                    Console.Out.WriteLine("Finished dropping table (if existed)");
-
-                }
-
-                using (var command = new NpgsqlCommand("CREATE TABLE orders(id serial PRIMARY KEY, name VARCHAR(50), quantity INTEGER)", conn))
-                {
-                    command.ExecuteNonQuery();
-                    Console.Out.WriteLine("Finished creating table");
-                }
-
-                using (var command = new NpgsqlCommand("INSERT INTO orders (name, quantity) VALUES (@n1, @q1), (@n2, @q2), (@n3, @q3)", conn))
-                {
-                    command.Parameters.AddWithValue("n1", "banana");
-                    command.Parameters.AddWithValue("q1", 150);
-                    command.Parameters.AddWithValue("n2", "orange");
-                    command.Parameters.AddWithValue("q2", 154);
-                    command.Parameters.AddWithValue("n3", "apple");
-                    command.Parameters.AddWithValue("q3", 100);
-                    
-                    int nRows = command.ExecuteNonQuery();
-                    Console.Out.WriteLine(String.Format("Number of rows inserted={0}", nRows));
-                }
-            }
 
             if (args.Length == 0)
             {
@@ -172,6 +145,48 @@ namespace cartservice
                             // Set redis cache host (hostname+port)
                             ICartStore cartStore;
                             string redis = ReadRedisAddress(options.Redis);
+                            string ysql = ReadRedisAddress(options.Redis);
+                            string connString =
+                                String.Format(
+                                    "Server={0};Username={1};Database={2};Port={3};Password={4};",
+                                    ysql,
+                                    User,
+                                    DBname,
+                                    Port,
+                                    Password);
+                            //var connString = "Server=35.238.194.192;Port=5433;Database=sample;User Id=postgres;Password=postgres;";
+                            using (var conn = new NpgsqlConnection(connString))
+
+                            {
+                                Console.Out.WriteLine("Opening connection");
+                                conn.Open();
+
+                                using (var command = new NpgsqlCommand("DROP TABLE IF EXISTS orders", conn))
+                                { 
+                                    command.ExecuteNonQuery();
+                                    Console.Out.WriteLine("Finished dropping table (if existed)");
+
+                                }
+
+                                using (var command = new NpgsqlCommand("CREATE TABLE orders(id serial PRIMARY KEY, name VARCHAR(50), quantity INTEGER)", conn))
+                                {
+                                    command.ExecuteNonQuery();
+                                    Console.Out.WriteLine("Finished creating table");
+                                }
+
+                                using (var command = new NpgsqlCommand("INSERT INTO orders (name, quantity) VALUES (@n1, @q1), (@n2, @q2), (@n3, @q3)", conn))
+                                {
+                                    command.Parameters.AddWithValue("n1", "banana");
+                                    command.Parameters.AddWithValue("q1", 150);
+                                    command.Parameters.AddWithValue("n2", "orange");
+                                    command.Parameters.AddWithValue("q2", 154);
+                                    command.Parameters.AddWithValue("n3", "apple");
+                                    command.Parameters.AddWithValue("q3", 100);
+                    
+                                    int nRows = command.ExecuteNonQuery();
+                                    Console.Out.WriteLine(String.Format("Number of rows inserted={0}", nRows));
+                                }
+                            }
 
                             // Redis was specified via command line or environment variable
                             if (!string.IsNullOrEmpty(redis))
