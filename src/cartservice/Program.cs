@@ -32,7 +32,6 @@ namespace cartservice
         const string REDIS_ADDRESS = "REDIS_ADDR";
         const string CART_SERVICE_PORT = "PORT";
         // Build connection string using parameters from yaml
-        //private static string Host = "35.238.194.192";
         private static string User = "postgres";
         private static string DBname = "sample";
         private static string Password = "postgres";
@@ -145,6 +144,7 @@ namespace cartservice
                             // Set redis cache host (hostname+port)
                             ICartStore cartStore;
                             string redis = ReadRedisAddress(options.Redis);
+                            // Extract and set YBDB host from kubernetes-manifest cartservice.yaml
                             string ysql = ReadRedisAddress(options.Redis);
                             string connString =
                                 String.Format(
@@ -154,9 +154,9 @@ namespace cartservice
                                     DBname,
                                     Port,
                                     Password);
-                            //var connString = "Server=35.238.194.192;Port=5433;Database=sample;User Id=postgres;Password=postgres;";
+                            //var connString = "Server=<static IP>;Port=5433;Database=sample;User Id=postgres;Password=postgres;";
                             using (var conn = new NpgsqlConnection(connString))
-
+                            //prep 'sample' database tables
                             {
                                 Console.Out.WriteLine("Opening connection");
                                 conn.Open();
@@ -193,7 +193,10 @@ namespace cartservice
                             {
                                 // If you want to start cart store using local cache in process, you can replace the following line with this:
                                 // cartStore = new LocalCartStore();
+                                // Redis cart store
                                 cartStore = new RedisCartStore(redis);
+                                // YSQL cart store
+                                cartStore = new SQLCartStore(ysql);
                                 return StartServer(hostname, port, cartStore);
                             }
                             else
