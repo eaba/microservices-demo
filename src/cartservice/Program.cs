@@ -174,7 +174,7 @@ namespace cartservice
                                     Console.Out.WriteLine("Finished creating table");
                                 }
 
-                                using (var command = new NpgsqlCommand("INSERT INTO orders (name, quantity) VALUES (@n1, @q1), (@n2, @q2), (@n3, @q3)", conn))
+                                /* using (var command = new NpgsqlCommand("INSERT INTO orders (name, quantity) VALUES (@n1, @q1), (@n2, @q2), (@n3, @q3)", conn))
                                 {
                                     command.Parameters.AddWithValue("n1", "banana");
                                     command.Parameters.AddWithValue("q1", 150);
@@ -185,7 +185,7 @@ namespace cartservice
                     
                                     int nRows = command.ExecuteNonQuery();
                                     Console.Out.WriteLine(String.Format("Number of rows inserted={0}", nRows));
-                                }
+                                }*/
                             }
 
                             // Redis was specified via command line or environment variable
@@ -194,7 +194,7 @@ namespace cartservice
                                 // If you want to start cart store using local cache in process, you can replace the following line with this:
                                 // cartStore = new LocalCartStore();
                                 // Redis cart store
-                                cartStore = new RedisCartStore(redis);
+                                // cartStore = new RedisCartStore(redis);
                                 // YSQL cart store
                                 cartStore = new SQLCartStore(ysql);
                                 return StartServer(hostname, port, cartStore);

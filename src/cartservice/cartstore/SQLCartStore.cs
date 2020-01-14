@@ -31,22 +31,34 @@ namespace cartservice.cartstore
     public class SQLCartStore : ICartStore
     {
         private const string CART_FIELD_NAME = "cart";
-        private const int SQL_RETRY_NUM = 5;
+        // private const int SQL_RETRY_NUM = 5;
 
-        private volatile bool isSQLConnectionOpened = false;
+        // private volatile bool isSQLConnectionOpened = false;
 
         private readonly object locker = new object();
         private readonly byte[] emptyCartBytes;
-        private readonly string connectionString;
+        private readonly string connectionString; 
+        // Build connection string using parameters from yaml
+        private static string User = "postgres";
+        private static string DBname = "sample";
+        private static string Password = "postgres";
+        private static string Port = "5433";
 
-        private readonly ConfigurationOptions sqlConnectionOptions;
+        //private readonly ConfigurationOptions sqlConnectionOptions;
 
         public SQLCartStore(string ysqlAddress)
         {
             // Serialize empty cart into byte array.
             var cart = new Hipstershop.Cart();
             emptyCartBytes = cart.ToByteArray();
-            connectionString = $"{ysqlAddress},ssl=false,allowAdmin=true,connectRetry=5";
+            connectionString = 
+                String.Format(
+                    "Server={0};Username={1};Database={2};Port={3};Password={4};",
+                    ysqlAddress,
+                    User,
+                    DBname,
+                    Port,
+                    Password);
             /*
             redisConnectionOptions = ConfigurationOptions.Parse(connectionString);
 
@@ -58,14 +70,21 @@ namespace cartservice.cartstore
             */
         }
 
-        /*public Task InitializeAsync()
-        {
+        public Task InitializeAsync()
+        { 
+            Console.WriteLine("Initialized");
+            return Task.CompletedTask;
+            /*
             EnsureRedisConnected();
             return Task.CompletedTask;
-        }*/
+            */
+        }
 
-        /*private void EnsureRedisConnected()
+        private void EnsureRedisConnected()
         {
+            Console.WriteLine("Connected");
+            return;
+            /*
             if (isRedisConnectionOpened)
             {
                 return;
@@ -112,23 +131,40 @@ namespace cartservice.cartstore
 
                 isRedisConnectionOpened = true;
             }
-        }*/
+            */
+        }
 
-        public async Task AddItemAsync(string userId, string productId, int quantity)
+        public Task AddItemAsync(string userId, string productId, int quantity)
         {
             Console.WriteLine($"AddItemAsync called with userId={userId}, productId={productId}, quantity={quantity}");
-
+            using (var conn = new NpgsqlConnection(connectionString))
             try
             {
-                EnsureRedisConnected();
+                conn.Open();
+                using (var command = new NpgsqlCommand("INSERT INTO orders (name, quantity) VALUES (@n1, @q1), (@n2, @q2), (@n3, @q3)", conn))
+                    {
+                        command.Parameters.AddWithValue("n1", "banana");
+                        command.Parameters.AddWithValue("q1", 150);
+                        command.Parameters.AddWithValue("n2", "orange");
+                        command.Parameters.AddWithValue("q2", 154);
+                        command.Parameters.AddWithValue("n3", "apple");
+                        command.Parameters.AddWithValue("q3", 100);
+                    
+                        int nRows = command.ExecuteNonQuery();
+                        Console.Out.WriteLine(String.Format("Number of rows inserted={0}", nRows));
+                    }
+                // EnsureRedisConnected();
 
-                var db = redis.GetDatabase();
+                // var db = redis.GetDatabase();
 
                 // Access the cart from the cache
-                var value = await db.HashGetAsync(userId, CART_FIELD_NAME);
-
+                //var value = await db.HashGetAsync(userId, CART_FIELD_NAME);
+                var value = userId;
                 Hipstershop.Cart cart;
-                if (value.IsNull)
+                cart = new Hipstershop.Cart();
+                cart.UserId = userId;
+                cart.Items.Add(new Hipstershop.CartItem { ProductId = productId, Quantity = quantity });
+                /* if (value.IsNull)
                 {
                     cart = new Hipstershop.Cart();
                     cart.UserId = userId;
@@ -147,19 +183,21 @@ namespace cartservice.cartstore
                         existingItem.Quantity += quantity;
                     }
                 }
-
-                await db.HashSetAsync(userId, new[]{ new HashEntry(CART_FIELD_NAME, cart.ToByteArray()) });
+                */
+                //await db.HashSetAsync(userId, new[]{ new HashEntry(CART_FIELD_NAME, cart.ToByteArray()) });
             }
             catch (Exception ex)
             {
                 throw new RpcException(new Status(StatusCode.FailedPrecondition, $"Can't access cart storage. {ex}"));
             }
+            return Task.CompletedTask;
         }
 
-        public async Task EmptyCartAsync(string userId)
+        public Task EmptyCartAsync(string userId)
         {
             Console.WriteLine($"EmptyCartAsync called with userId={userId}");
-
+            return Task.CompletedTask;
+            /*
             try
             {
                 EnsureRedisConnected();
@@ -172,37 +210,43 @@ namespace cartservice.cartstore
             {
                 throw new RpcException(new Status(StatusCode.FailedPrecondition, $"Can't access cart storage. {ex}"));
             }
+            */
         }
 
         public async Task<Hipstershop.Cart> GetCartAsync(string userId)
         {
             Console.WriteLine($"GetCartAsync called with userId={userId}");
-
             try
             {
-                EnsureRedisConnected();
+                //EnsureRedisConnected();
 
-                var db = redis.GetDatabase();
+                //var db = redis.GetDatabase();
 
                 // Access the cart from the cache
-                var value = await db.HashGetAsync(userId, CART_FIELD_NAME);
+                //var value = await db.HashGetAsync(userId, CART_FIELD_NAME);
 
-                if (!value.IsNull)
+                /*if (!value.IsNull)
                 {
                     return Hipstershop.Cart.Parser.ParseFrom(value);
-                }
+                }*/
 
                 // We decided to return empty cart in cases when user wasn't in the cache before
+                //var value = new byte[] { 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20 };
+                //return Hipstershop.Cart.Parser.ParseFrom(value);
                 return new Hipstershop.Cart();
             }
             catch (Exception ex)
             {
                 throw new RpcException(new Status(StatusCode.FailedPrecondition, $"Can't access cart storage. {ex}"));
             }
+            
         }
 
-        /*public bool Ping()
+        public bool Ping()
         {
+            Console.WriteLine("Pinged");
+            return true;
+            /*
             try
             {
                 var cache = redis.GetDatabase();
@@ -213,6 +257,7 @@ namespace cartservice.cartstore
             {
                 return false;
             }
-        }*/
+            */
+        }
     }
 }
