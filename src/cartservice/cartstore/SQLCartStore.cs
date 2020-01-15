@@ -42,7 +42,7 @@ namespace cartservice.cartstore
         private static string User = "postgres";
         private static string DBname = "sample";
         private static string Password = "postgres";
-        private static string Port = "5433";
+        private static string dbPort = "5433";
 
         //private readonly ConfigurationOptions sqlConnectionOptions;
 
@@ -57,8 +57,24 @@ namespace cartservice.cartstore
                     ysqlAddress,
                     User,
                     DBname,
-                    Port,
+                    dbPort,
                     Password);
+            using (var conn = new NpgsqlConnection(connectionString))
+            //prep 'sample' database tables
+            {
+                Console.Out.WriteLine("Opening connection");
+                conn.Open();
+                using (var command = new NpgsqlCommand("CREATE TABLE carts(id serial PRIMARY KEY, user VARCHAR(50), product VARCHAR(50), quantity integer)", conn))
+                {
+                    command.ExecuteNonQuery();
+                    Console.Out.WriteLine("Finished creating table");
+                }
+                using (var command = new NpgsqlCommand("CREATE TABLE orders(id serial PRIMARY KEY, order VARCHAR(50), ordercontents VARCHAR(50))", conn))
+                {
+                    command.ExecuteNonQuery();
+                    Console.Out.WriteLine("Finished creating table");
+                }
+            }
             /*
             redisConnectionOptions = ConfigurationOptions.Parse(connectionString);
 
@@ -72,6 +88,17 @@ namespace cartservice.cartstore
 
         public Task InitializeAsync()
         { 
+
+                /*using (var command = new NpgsqlCommand("CREATE TABLE carts(id serial PRIMARY KEY, user VARCHAR(50), product VARCHAR(50), quantity integer)", conn))
+                {
+                    command.ExecuteNonQuery();
+                    Console.Out.WriteLine("Finished creating table");
+                }
+                using (var command = new NpgsqlCommand("CREATE TABLE orders(id serial PRIMARY KEY, order VARCHAR(50), ordercontents VARCHAR(50))", conn))
+                {
+                    command.ExecuteNonQuery();
+                    Console.Out.WriteLine("Finished creating table");
+                }*/
             Console.WriteLine("Initialized");
             return Task.CompletedTask;
             /*
@@ -141,15 +168,11 @@ namespace cartservice.cartstore
             try
             {
                 conn.Open();
-                using (var command = new NpgsqlCommand("INSERT INTO orders (name, quantity) VALUES (@n1, @q1), (@n2, @q2), (@n3, @q3)", conn))
+                using (var command = new NpgsqlCommand("INSERT INTO carts (user, product, quantity) VALUES (@n1, @p1, @q1)", conn))
                     {
-                        command.Parameters.AddWithValue("n1", "banana");
-                        command.Parameters.AddWithValue("q1", 150);
-                        command.Parameters.AddWithValue("n2", "orange");
-                        command.Parameters.AddWithValue("q2", 154);
-                        command.Parameters.AddWithValue("n3", "apple");
-                        command.Parameters.AddWithValue("q3", 100);
-                    
+                        command.Parameters.AddWithValue("n1", userId);
+                        command.Parameters.AddWithValue("p1", productId);
+                        command.Parameters.AddWithValue("q1", quantity);
                         int nRows = command.ExecuteNonQuery();
                         Console.Out.WriteLine(String.Format("Number of rows inserted={0}", nRows));
                     }

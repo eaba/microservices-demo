@@ -35,7 +35,7 @@ namespace cartservice
         private static string User = "postgres";
         private static string DBname = "sample";
         private static string Password = "postgres";
-        private static string Port = "5433";
+        private static string dbPort = "5433";
 
         [Verb("start", HelpText = "Starts the server listening on provided port")]
         class ServerOptions
@@ -146,32 +146,25 @@ namespace cartservice
                             string redis = ReadRedisAddress(options.Redis);
                             // Extract and set YBDB host from kubernetes-manifest cartservice.yaml
                             string ysql = ReadRedisAddress(options.Redis);
-                            string connString =
+                            string connectionString =
                                 String.Format(
                                     "Server={0};Username={1};Database={2};Port={3};Password={4};",
                                     ysql,
                                     User,
                                     DBname,
-                                    Port,
+                                    dbPort,
                                     Password);
-                            //var connString = "Server=<static IP>;Port=5433;Database=sample;User Id=postgres;Password=postgres;";
-                            using (var conn = new NpgsqlConnection(connString))
+                            //var connectionString = "Server=<static IP>;Port=5433;Database=sample;User Id=postgres;Password=postgres;";
+                            using (var conn = new NpgsqlConnection(connectionString))
                             //prep 'sample' database tables
                             {
                                 Console.Out.WriteLine("Opening connection");
                                 conn.Open();
 
-                                using (var command = new NpgsqlCommand("DROP TABLE IF EXISTS orders", conn))
+                                using (var command = new NpgsqlCommand("DROP TABLE IF EXISTS carts, orders", conn))
                                 { 
                                     command.ExecuteNonQuery();
-                                    Console.Out.WriteLine("Finished dropping table (if existed)");
-
-                                }
-
-                                using (var command = new NpgsqlCommand("CREATE TABLE orders(id serial PRIMARY KEY, name VARCHAR(50), quantity INTEGER)", conn))
-                                {
-                                    command.ExecuteNonQuery();
-                                    Console.Out.WriteLine("Finished creating table");
+                                    Console.Out.WriteLine("Finished dropping tables (if existed)");
                                 }
 
                                 /* using (var command = new NpgsqlCommand("INSERT INTO orders (name, quantity) VALUES (@n1, @q1), (@n2, @q2), (@n3, @q3)", conn))
