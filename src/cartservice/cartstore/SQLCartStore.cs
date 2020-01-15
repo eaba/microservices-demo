@@ -64,16 +64,16 @@ namespace cartservice.cartstore
             {
                 Console.Out.WriteLine("Opening connection");
                 conn.Open();
-                using (var command = new NpgsqlCommand("CREATE TABLE carts(id serial PRIMARY KEY, user VARCHAR(50), product VARCHAR(50), quantity integer)", conn))
+                /*using (var command = new NpgsqlCommand("CREATE TABLE carts(id serial PRIMARY KEY, userid VARCHAR(50), product VARCHAR(50), quantity integer)", conn))
                 {
                     command.ExecuteNonQuery();
                     Console.Out.WriteLine("Finished creating table");
                 }
-                using (var command = new NpgsqlCommand("CREATE TABLE orders(id serial PRIMARY KEY, order VARCHAR(50), ordercontents VARCHAR(50))", conn))
+                using (var command = new NpgsqlCommand("CREATE TABLE orders(id serial PRIMARY KEY, orderid VARCHAR(50), ordercontents VARCHAR(50))", conn))
                 {
                     command.ExecuteNonQuery();
                     Console.Out.WriteLine("Finished creating table");
-                }
+                }*/
             }
             /*
             redisConnectionOptions = ConfigurationOptions.Parse(connectionString);
@@ -89,12 +89,12 @@ namespace cartservice.cartstore
         public Task InitializeAsync()
         { 
 
-                /*using (var command = new NpgsqlCommand("CREATE TABLE carts(id serial PRIMARY KEY, user VARCHAR(50), product VARCHAR(50), quantity integer)", conn))
+                /*using (var command = new NpgsqlCommand("CREATE TABLE carts(id serial PRIMARY KEY, userid VARCHAR(50), product VARCHAR(50), quantity integer)", conn))
                 {
                     command.ExecuteNonQuery();
                     Console.Out.WriteLine("Finished creating table");
                 }
-                using (var command = new NpgsqlCommand("CREATE TABLE orders(id serial PRIMARY KEY, order VARCHAR(50), ordercontents VARCHAR(50))", conn))
+                using (var command = new NpgsqlCommand("CREATE TABLE orders(id serial PRIMARY KEY, orderid VARCHAR(50), ordercontents VARCHAR(50))", conn))
                 {
                     command.ExecuteNonQuery();
                     Console.Out.WriteLine("Finished creating table");
@@ -168,7 +168,7 @@ namespace cartservice.cartstore
             try
             {
                 conn.Open();
-                using (var command = new NpgsqlCommand("INSERT INTO carts (user, product, quantity) VALUES (@n1, @p1, @q1)", conn))
+                using (var command = new NpgsqlCommand("INSERT INTO carts (userid, product, quantity) VALUES (@n1, @p1, @q1)", conn))
                     {
                         command.Parameters.AddWithValue("n1", userId);
                         command.Parameters.AddWithValue("p1", productId);

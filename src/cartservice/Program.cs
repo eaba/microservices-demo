@@ -146,7 +146,7 @@ namespace cartservice
                             string redis = ReadRedisAddress(options.Redis);
                             // Extract and set YBDB host from kubernetes-manifest cartservice.yaml
                             string ysql = ReadRedisAddress(options.Redis);
-                            string connectionString =
+                            /*string connectionString =
                                 String.Format(
                                     "Server={0};Username={1};Database={2};Port={3};Password={4};",
                                     ysql,
@@ -166,20 +166,7 @@ namespace cartservice
                                     command.ExecuteNonQuery();
                                     Console.Out.WriteLine("Finished dropping tables (if existed)");
                                 }
-
-                                /* using (var command = new NpgsqlCommand("INSERT INTO orders (name, quantity) VALUES (@n1, @q1), (@n2, @q2), (@n3, @q3)", conn))
-                                {
-                                    command.Parameters.AddWithValue("n1", "banana");
-                                    command.Parameters.AddWithValue("q1", 150);
-                                    command.Parameters.AddWithValue("n2", "orange");
-                                    command.Parameters.AddWithValue("q2", 154);
-                                    command.Parameters.AddWithValue("n3", "apple");
-                                    command.Parameters.AddWithValue("q3", 100);
-                    
-                                    int nRows = command.ExecuteNonQuery();
-                                    Console.Out.WriteLine(String.Format("Number of rows inserted={0}", nRows));
-                                }*/
-                            }
+                            }*/
 
                             // Redis was specified via command line or environment variable
                             if (!string.IsNullOrEmpty(redis))
