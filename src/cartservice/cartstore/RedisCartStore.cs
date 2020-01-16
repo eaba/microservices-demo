@@ -22,6 +22,7 @@ using Google.Protobuf;
 using Grpc.Core;
 using Hipstershop;
 using StackExchange.Redis;
+using Npgsql;
 
 namespace cartservice.cartstore
 {

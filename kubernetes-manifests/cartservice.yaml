@@ -33,7 +33,7 @@ spec:
         - containerPort: 7070
         env:
         - name: REDIS_ADDR
-          value: "ysql-service"
+          value: "redis-cart:6379"
         - name: PORT
           value: "7070"
         - name: LISTEN_ADDR

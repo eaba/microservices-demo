@@ -145,7 +145,7 @@ namespace cartservice
                             ICartStore cartStore;
                             string redis = ReadRedisAddress(options.Redis);
                             // Extract and set YBDB host from kubernetes-manifest cartservice.yaml
-                            string ysql = ReadRedisAddress(options.Redis);
+                            // string ysql = ReadRedisAddress(options.Redis);
                             /*string connectionString =
                                 String.Format(
                                     "Server={0};Username={1};Database={2};Port={3};Password={4};",
@@ -174,9 +174,9 @@ namespace cartservice
                                 // If you want to start cart store using local cache in process, you can replace the following line with this:
                                 // cartStore = new LocalCartStore();
                                 // Redis cart store
-                                // cartStore = new RedisCartStore(redis);
+                                cartStore = new RedisCartStore(redis);
                                 // YSQL cart store
-                                cartStore = new SQLCartStore(ysql);
+                                // cartStore = new SQLCartStore(ysql);
                                 return StartServer(hostname, port, cartStore);
                             }
                             else
