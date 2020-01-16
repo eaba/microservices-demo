@@ -32,10 +32,10 @@ namespace cartservice
         const string REDIS_ADDRESS = "REDIS_ADDR";
         const string CART_SERVICE_PORT = "PORT";
         // Build connection string using parameters from yaml
-        private static string User = "postgres";
-        private static string DBname = "sample";
-        private static string Password = "postgres";
-        private static string dbPort = "5433";
+        // private static string User = "postgres";
+        // private static string DBname = "sample";
+        // private static string Password = "postgres";
+        // private static string dbPort = "5433";
 
         [Verb("start", HelpText = "Starts the server listening on provided port")]
         class ServerOptions

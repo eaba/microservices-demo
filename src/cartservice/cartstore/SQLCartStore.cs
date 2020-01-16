@@ -43,6 +43,10 @@ namespace cartservice.cartstore
         private static string DBname = "sample";
         private static string Password = "postgres";
         private static string dbPort = "5433";
+        private string cartindex;
+        private string cartuserId;
+        private string cartproductId;
+        private int cartquantity = 0;
 
         //private readonly ConfigurationOptions sqlConnectionOptions;
 
@@ -219,7 +223,18 @@ namespace cartservice.cartstore
         public Task EmptyCartAsync(string userId)
         {
             Console.WriteLine($"EmptyCartAsync called with userId={userId}");
+            using (var conn = new NpgsqlConnection(connectionString))
+            {
+                conn.Open();
+                using (var command = new NpgsqlCommand("DELETE FROM carts WHERE userid = @n", conn))
+                {
+                    command.Parameters.AddWithValue("n", userId);
+
+                    int nRows = command.ExecuteNonQuery();
+                    Console.Out.WriteLine(String.Format("Number of rows deleted={0}", nRows));
+                }
             return Task.CompletedTask;
+            }
             /*
             try
             {
@@ -228,41 +243,66 @@ namespace cartservice.cartstore
 
                 // Update the cache with empty cart for given user
                 await db.HashSetAsync(userId, new[] { new HashEntry(CART_FIELD_NAME, emptyCartBytes) });
-            }
-            catch (Exception ex)
+            }*/
+            /*catch (Exception ex)
             {
                 throw new RpcException(new Status(StatusCode.FailedPrecondition, $"Can't access cart storage. {ex}"));
-            }
-            */
+            }*/
         }
 
         public async Task<Hipstershop.Cart> GetCartAsync(string userId)
         {
             Console.WriteLine($"GetCartAsync called with userId={userId}");
+            using (var conn = new NpgsqlConnection(connectionString))
             try
             {
-                //EnsureRedisConnected();
-
-                //var db = redis.GetDatabase();
-
-                // Access the cart from the cache
-                //var value = await db.HashGetAsync(userId, CART_FIELD_NAME);
-
-                /*if (!value.IsNull)
+                Hipstershop.Cart cart;
+                conn.Open();
+                using (var command = new NpgsqlCommand("SELECT * FROM carts WHERE userid = " + userId, conn))
                 {
-                    return Hipstershop.Cart.Parser.ParseFrom(value);
-                }*/
+                    var reader = command.ExecuteReader();
+                    int count = 0;
 
-                // We decided to return empty cart in cases when user wasn't in the cache before
-                //var value = new byte[] { 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20 };
-                //return Hipstershop.Cart.Parser.ParseFrom(value);
-                return new Hipstershop.Cart();
+                    while (reader.Read())
+                    {
+                        //get index
+                        cartindex = reader.GetInt32(0).ToString();
+                        //get userid
+                        cartuserId = reader.GetString(1);
+                        //get productId
+                        cartproductId = reader.GetString(2).ToString();
+                        //get quantity
+                        cartquantity = reader.GetInt32(3);
+                        Console.WriteLine(
+                            string.Format(
+                                "Reading from table=({0}, {1}, {2}, {3})",
+                                cartindex,
+                                cartuserId,
+                                cartproductId,
+                                cartquantity
+                                )
+                            );
+
+                        //cart.Items.Add(new Hipstershop.CartItem { ProductId = cartproductId, Quantity = quantity });
+                        count++;
+                    }
+                    if (count == 0)
+                    {
+                        return new Hipstershop.Cart();
+                    }
+                    else
+                    {
+                        cart = new Hipstershop.Cart();
+                        cart.UserId = userId;
+                        cart.Items.Add(new Hipstershop.CartItem { ProductId = cartproductId, Quantity = cartquantity });
+                        return cart;
+                    }
+                }
             }
             catch (Exception ex)
             {
                 throw new RpcException(new Status(StatusCode.FailedPrecondition, $"Can't access cart storage. {ex}"));
-            }
-            
+            }           
         }
 
         public bool Ping()
