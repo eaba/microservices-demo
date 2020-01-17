@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Text;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -39,6 +40,12 @@ namespace cartservice.cartstore
         private readonly string connectionString;
 
         private readonly ConfigurationOptions redisConnectionOptions;
+        private static string ysqlconnectionString = "Server=35.238.194.192;Port=5433;Database=sample;User Id=postgres;Password=postgres;No Reset On Close=true;Pooling=true;";
+        //private static string ysqladdress = "35.238.194.192"
+        //private static string User = "postgres";
+        //private static string DBname = "sample";
+        //private static string Password = "postgres";
+        //private static string dbPort = "5433";
 
         public RedisCartStore(string redisAddress)
         {
@@ -121,12 +128,87 @@ namespace cartservice.cartstore
                 EnsureRedisConnected();
 
                 var db = redis.GetDatabase();
-
+                Hipstershop.Cart cart = new Hipstershop.Cart();
+                int count = 0;
+                bool existingitem = false;
+                bool emptycart = true;
                 // Access the cart from the cache
-                var value = await db.HashGetAsync(userId, CART_FIELD_NAME);
+                // var value = await db.HashGetAsync(userId, CART_FIELD_NAME);
+                // Access cart from YSQL
+                using (var conn = new NpgsqlConnection(ysqlconnectionString))
+                {
+                    conn.Open();
+                    using (var command = new NpgsqlCommand("SELECT * FROM carts WHERE userid = @n", conn))
+                    {
+                        command.Parameters.AddWithValue("n", userId);
+                        var reader = command.ExecuteReader();
+                        cart.UserId = userId;
+                        while (reader.Read())
+                        {
+                            emptycart = false;
+                            Console.Out.WriteLine("add to cart " + reader.GetString(2) + " q " + reader.GetInt32(3).ToString());
+                            if (productId == reader.GetString(2))
+                            {
+                                count++;
+                                existingitem = true;
+                                quantity += reader.GetInt32(3);
+                                // ready to add new quantity to object
+                                cart.Items.Add(new Hipstershop.CartItem { ProductId = reader.GetString(2), Quantity = quantity });
+                            }
+                            else
+                            {
+                                // adding old quantity back into object
+                                cart.Items.Add(new Hipstershop.CartItem { ProductId = reader.GetString(2), Quantity = reader.GetInt32(3) });
+                            }
+                        }
+                    }
+                    conn.Close();
+                }
+                    //cart is prepped
+                if (existingitem)
+                {
+                    using (var conn = new NpgsqlConnection(ysqlconnectionString))
+                    {
+                        conn.Open();
+                        using (var command = new NpgsqlCommand("UPDATE carts SET quantity = @q WHERE userId = @n AND product = @p", conn))
+                        {
+                            command.Parameters.AddWithValue("n", userId);
+                            command.Parameters.AddWithValue("p", productId);
+                            command.Parameters.AddWithValue("q", quantity);
+                    
+                            int nRows = command.ExecuteNonQuery();
+                            Console.Out.WriteLine(String.Format("Number of rows updated={0}", nRows));
+                        }
+                        conn.Close();
+                    }
+                }
+                else // new item
+                {
+                    if (emptycart)
+                    {
+                        // add new product and quantity into object
+                        cart.Items.Add(new Hipstershop.CartItem { ProductId = productId, Quantity = quantity }); 
+                    }
+                    using (var conn = new NpgsqlConnection(ysqlconnectionString))
+                    {
+                        conn.Open();
+                        cart.Items.Add(new Hipstershop.CartItem { ProductId = productId, Quantity = quantity });
+                        using (var command = new NpgsqlCommand("INSERT INTO carts (userid, product, quantity) VALUES (@n1, @p1, @q1)", conn))
+                        {
+                            command.Parameters.AddWithValue("n1", userId);
+                            command.Parameters.AddWithValue("p1", productId);
+                            command.Parameters.AddWithValue("q1", quantity);
+                            int nRows = command.ExecuteNonQuery();
+                            Console.Out.WriteLine(String.Format("Number of rows inserted={0}", nRows));
+                        }
+                        conn.Close();
+                    }
+                }
+                // Access the cart from the cache
+                // var value = await db.HashGetAsync(userId, CART_FIELD_NAME);
 
-                Hipstershop.Cart cart;
-                if (value.IsNull)
+                // Hipstershop.Cart cart;
+                /*if (value.IsNull)
                 {
                     cart = new Hipstershop.Cart();
                     cart.UserId = userId;
@@ -144,7 +226,10 @@ namespace cartservice.cartstore
                     {
                         existingItem.Quantity += quantity;
                     }
-                }
+                }*/
+
+                //duplicate data into ysql
+                // var ysqlconnectionString = "Server=35.238.194.192;Port=5433;Database=sample;User Id=postgres;Password=postgres;";
 
                 await db.HashSetAsync(userId, new[]{ new HashEntry(CART_FIELD_NAME, cart.ToByteArray()) });
             }
@@ -157,7 +242,6 @@ namespace cartservice.cartstore
         public async Task EmptyCartAsync(string userId)
         {
             Console.WriteLine($"EmptyCartAsync called with userId={userId}");
-
             try
             {
                 EnsureRedisConnected();
@@ -165,6 +249,20 @@ namespace cartservice.cartstore
 
                 // Update the cache with empty cart for given user
                 await db.HashSetAsync(userId, new[] { new HashEntry(CART_FIELD_NAME, emptyCartBytes) });
+                // Update the cache with empty cart from YSQL
+                using (var conn = new NpgsqlConnection(ysqlconnectionString))
+                {
+                    conn.Open();
+
+                    using (var command = new NpgsqlCommand("DELETE FROM carts WHERE userid = @n", conn))
+                    // using (var command = new NpgsqlCommand("DELETE FROM scratch WHERE userid = @n", conn))
+                    {
+                        command.Parameters.AddWithValue("n", userId);
+                        int nRows = command.ExecuteNonQuery();
+                        Console.Out.WriteLine(String.Format("Number of rows deleted={0}", nRows));
+                    }
+                    conn.Close();
+                }
             }
             catch (Exception ex)
             {
@@ -181,17 +279,43 @@ namespace cartservice.cartstore
                 EnsureRedisConnected();
 
                 var db = redis.GetDatabase();
-
+                Hipstershop.Cart cart = new Hipstershop.Cart();
                 // Access the cart from the cache
-                var value = await db.HashGetAsync(userId, CART_FIELD_NAME);
-
-                if (!value.IsNull)
+                // var value = await db.HashGetAsync(userId, CART_FIELD_NAME);
+                // Access cart from YSQL
+                using (var conn = new NpgsqlConnection(ysqlconnectionString))
+                {
+                    conn.Open();
+                    using (var command = new NpgsqlCommand("SELECT * FROM carts WHERE userid = @n", conn))
+                    {
+                        command.Parameters.AddWithValue("n", userId);
+                        var reader = command.ExecuteReader();
+                        int count = 0;
+                        cart.UserId = userId;
+                        while (reader.Read())
+                        {
+                            count++;
+                            Console.Out.WriteLine("get cart " + reader.GetString(2) + " q " + reader.GetInt32(3).ToString());
+                            cart.Items.Add(new Hipstershop.CartItem { ProductId = reader.GetString(2), Quantity = reader.GetInt32(3) });
+                        }
+                        if (count == 0)
+                        {
+                            conn.Close();
+                            return new Hipstershop.Cart();
+                        }
+                    }
+                    conn.Close();
+                    return cart;
+                }
+                
+                /*if (!value.IsNull)
                 {
                     return Hipstershop.Cart.Parser.ParseFrom(value);
                 }
 
                 // We decided to return empty cart in cases when user wasn't in the cache before
                 return new Hipstershop.Cart();
+                */
             }
             catch (Exception ex)
             {
