@@ -32,44 +32,44 @@ namespace cartservice.cartstore
         private const string CART_FIELD_NAME = "cart";
         private const int REDIS_RETRY_NUM = 5;
 
-        private volatile ConnectionMultiplexer redis;
-        private volatile bool isRedisConnectionOpened = false;
+        //private volatile ConnectionMultiplexer redis;
+        //private volatile bool isRedisConnectionOpened = false;
 
         private readonly object locker = new object();
         private readonly byte[] emptyCartBytes;
-        private readonly string connectionString;
+        private readonly string ysqlconnectionString;
 
-        private readonly ConfigurationOptions redisConnectionOptions;
-        private static string ysqlconnectionString = "Server=35.238.194.192;Port=5433;Database=sample;User Id=postgres;Password=postgres;No Reset On Close=true;Pooling=true;";
+        //private readonly ConfigurationOptions redisConnectionOptions;
+        //private static string ysqlconnectionString = "Server=35.238.194.192;Port=5433;Database=sample;User Id=postgres;Password=postgres;No Reset On Close=true;Pooling=true;";
         //private static string ysqladdress = "35.238.194.192"
         //private static string User = "postgres";
         //private static string DBname = "sample";
         //private static string Password = "postgres";
         //private static string dbPort = "5433";
 
-        public RedisCartStore(string redisAddress)
+        public RedisCartStore(string ysqlAddress)
         {
             // Serialize empty cart into byte array.
             var cart = new Hipstershop.Cart();
             emptyCartBytes = cart.ToByteArray();
-            connectionString = $"{redisAddress},ssl=false,allowAdmin=true,connectRetry=5";
-
-            redisConnectionOptions = ConfigurationOptions.Parse(connectionString);
+            ysqlconnectionString = $"Server={ysqlAddress};Port=5433;Database=sample;User Id=postgres;Password=postgres;No Reset On Close=true;Pooling=true;";
+            // connectionString = $"{redisAddress},ssl=false,allowAdmin=true,connectRetry=5";
+            // redisConnectionOptions = ConfigurationOptions.Parse(connectionString);
 
             // Try to reconnect if first retry failed (up to 5 times with exponential backoff)
-            redisConnectionOptions.ConnectRetry = REDIS_RETRY_NUM;
-            redisConnectionOptions.ReconnectRetryPolicy = new ExponentialRetry(100);
+            // redisConnectionOptions.ConnectRetry = REDIS_RETRY_NUM;
+            // redisConnectionOptions.ReconnectRetryPolicy = new ExponentialRetry(100);
 
-            redisConnectionOptions.KeepAlive = 180;
+            // redisConnectionOptions.KeepAlive = 180;
         }
 
         public Task InitializeAsync()
         {
-            EnsureRedisConnected();
+            //EnsureRedisConnected();
             return Task.CompletedTask;
         }
 
-        private void EnsureRedisConnected()
+        /*private void EnsureRedisConnected()
         {
             if (isRedisConnectionOpened)
             {
@@ -117,7 +117,7 @@ namespace cartservice.cartstore
 
                 isRedisConnectionOpened = true;
             }
-        }
+        }*/
 
         public async Task AddItemAsync(string userId, string productId, int quantity)
         {
@@ -125,9 +125,9 @@ namespace cartservice.cartstore
 
             try
             {
-                EnsureRedisConnected();
+                // EnsureRedisConnected();
 
-                var db = redis.GetDatabase();
+                // var db = redis.GetDatabase();
                 Hipstershop.Cart cart = new Hipstershop.Cart();
                 int count = 0;
                 bool existingitem = false;
@@ -170,7 +170,7 @@ namespace cartservice.cartstore
                     using (var conn = new NpgsqlConnection(ysqlconnectionString))
                     {
                         conn.Open();
-                        using (var command = new NpgsqlCommand("UPDATE carts SET quantity = @q WHERE userId = @n AND product = @p", conn))
+                        using (var command = new NpgsqlCommand("UPDATE carts SET quantity = @q WHERE userId = @n AND productId = @p", conn))
                         {
                             command.Parameters.AddWithValue("n", userId);
                             command.Parameters.AddWithValue("p", productId);
@@ -193,7 +193,7 @@ namespace cartservice.cartstore
                     {
                         conn.Open();
                         cart.Items.Add(new Hipstershop.CartItem { ProductId = productId, Quantity = quantity });
-                        using (var command = new NpgsqlCommand("INSERT INTO carts (userid, product, quantity) VALUES (@n1, @p1, @q1)", conn))
+                        using (var command = new NpgsqlCommand("INSERT INTO carts (userId, productId, quantity) VALUES (@n1, @p1, @q1)", conn))
                         {
                             command.Parameters.AddWithValue("n1", userId);
                             command.Parameters.AddWithValue("p1", productId);
@@ -204,34 +204,11 @@ namespace cartservice.cartstore
                         conn.Close();
                     }
                 }
-                // Access the cart from the cache
-                // var value = await db.HashGetAsync(userId, CART_FIELD_NAME);
-
-                // Hipstershop.Cart cart;
-                /*if (value.IsNull)
-                {
-                    cart = new Hipstershop.Cart();
-                    cart.UserId = userId;
-                    cart.Items.Add(new Hipstershop.CartItem { ProductId = productId, Quantity = quantity });
-                }
-                else
-                {
-                    cart = Hipstershop.Cart.Parser.ParseFrom(value);
-                    var existingItem = cart.Items.SingleOrDefault(i => i.ProductId == productId);
-                    if (existingItem == null)
-                    {
-                        cart.Items.Add(new Hipstershop.CartItem { ProductId = productId, Quantity = quantity });
-                    }
-                    else
-                    {
-                        existingItem.Quantity += quantity;
-                    }
-                }*/
 
                 //duplicate data into ysql
                 // var ysqlconnectionString = "Server=35.238.194.192;Port=5433;Database=sample;User Id=postgres;Password=postgres;";
 
-                await db.HashSetAsync(userId, new[]{ new HashEntry(CART_FIELD_NAME, cart.ToByteArray()) });
+                // await db.HashSetAsync(userId, new[]{ new HashEntry(CART_FIELD_NAME, cart.ToByteArray()) });
             }
             catch (Exception ex)
             {
@@ -244,11 +221,11 @@ namespace cartservice.cartstore
             Console.WriteLine($"EmptyCartAsync called with userId={userId}");
             try
             {
-                EnsureRedisConnected();
-                var db = redis.GetDatabase();
+                // EnsureRedisConnected();
+                // var db = redis.GetDatabase();
 
                 // Update the cache with empty cart for given user
-                await db.HashSetAsync(userId, new[] { new HashEntry(CART_FIELD_NAME, emptyCartBytes) });
+                // await db.HashSetAsync(userId, new[] { new HashEntry(CART_FIELD_NAME, emptyCartBytes) });
                 // Update the cache with empty cart from YSQL
                 using (var conn = new NpgsqlConnection(ysqlconnectionString))
                 {
@@ -276,9 +253,9 @@ namespace cartservice.cartstore
 
             try
             {
-                EnsureRedisConnected();
+                // EnsureRedisConnected();
 
-                var db = redis.GetDatabase();
+                // var db = redis.GetDatabase();
                 Hipstershop.Cart cart = new Hipstershop.Cart();
                 // Access the cart from the cache
                 // var value = await db.HashGetAsync(userId, CART_FIELD_NAME);
@@ -325,7 +302,8 @@ namespace cartservice.cartstore
 
         public bool Ping()
         {
-            try
+            return true;
+            /*try
             {
                 var cache = redis.GetDatabase();
                 var res = cache.Ping();
@@ -334,7 +312,7 @@ namespace cartservice.cartstore
             catch (Exception)
             {
                 return false;
-            }
+            }*/
         }
     }
 }

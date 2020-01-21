@@ -15,11 +15,23 @@
         {
             "id": "66VCHSJNUP",
             "name": "Vintage Camera Lens",
-            "description": "You won't have a camera to use it and it probably doesn't work anyway.",
+            "description": "You won't have a camera to use it and it probably doesn't work anyway..",
             "picture": "/static/img/products/camera-lens.jpg",
             "priceUsd": {
                 "currencyCode": "USD",
                 "units": 12,
+                "nanos": 490000000
+            },
+            "categories": ["photography", "vintage"]
+        },
+        {
+            "id": "98BORK4NUP",
+            "name": "Vintage Hundred Dollar Bill",
+            "description": "Such a low price to own pure art.",
+            "picture": "/static/img/products/benjamin.jpg",
+            "priceUsd": {
+                "currencyCode": "USD",
+                "units": 120,
                 "nanos": 490000000
             },
             "categories": ["photography", "vintage"]

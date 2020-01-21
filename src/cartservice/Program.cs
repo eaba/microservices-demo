@@ -31,11 +31,6 @@ namespace cartservice
         const string CART_SERVICE_ADDRESS = "LISTEN_ADDR";
         const string REDIS_ADDRESS = "REDIS_ADDR";
         const string CART_SERVICE_PORT = "PORT";
-        // Build connection string using parameters from yaml
-        // private static string User = "postgres";
-        // private static string DBname = "sample";
-        // private static string Password = "postgres";
-        // private static string dbPort = "5433";
 
         [Verb("start", HelpText = "Starts the server listening on provided port")]
         class ServerOptions
@@ -58,7 +53,7 @@ namespace cartservice
             {
                 try
                 {
-                    await cartStore.InitializeAsync();
+                    // await cartStore.InitializeAsync();
 
                     Console.WriteLine($"Trying to start a grpc server at  {host}:{port}");
                     Server server = new Server
@@ -146,27 +141,6 @@ namespace cartservice
                             string redis = ReadRedisAddress(options.Redis);
                             // Extract and set YBDB host from kubernetes-manifest cartservice.yaml
                             // string ysql = ReadRedisAddress(options.Redis);
-                            /*string connectionString =
-                                String.Format(
-                                    "Server={0};Username={1};Database={2};Port={3};Password={4};",
-                                    ysql,
-                                    User,
-                                    DBname,
-                                    dbPort,
-                                    Password);
-                            //var connectionString = "Server=<static IP>;Port=5433;Database=sample;User Id=postgres;Password=postgres;";
-                            using (var conn = new NpgsqlConnection(connectionString))
-                            //prep 'sample' database tables
-                            {
-                                Console.Out.WriteLine("Opening connection");
-                                conn.Open();
-
-                                using (var command = new NpgsqlCommand("DROP TABLE IF EXISTS carts, orders", conn))
-                                { 
-                                    command.ExecuteNonQuery();
-                                    Console.Out.WriteLine("Finished dropping tables (if existed)");
-                                }
-                            }*/
 
                             // Redis was specified via command line or environment variable
                             if (!string.IsNullOrEmpty(redis))
