@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
  name: prometheus-config
- namespace: istio-system
+ namespace: yb-demo
 data:
  prometheus.yml: |
   global:
