@@ -122,7 +122,8 @@ We offer two installation methods:
     kubectl create namespace yb-demo
     kubectl config set-context --namespace yb-demo --current
     helm repo add yugabytedb https://charts.yugabyte.com
-    helm search yugabytedb
+    helm repo update
+    helm search repo yugabytedb/yugabyte
     helm install yb-demo yugabytedb/yugabyte -f https://raw.githubusercontent.com/YugaByte/charts/master/stable/yugabyte/expose-all.yaml --version 2.0.9 --wait
     ```
 
@@ -130,6 +131,7 @@ We offer two installation methods:
 
     ```sh
     bin/ysqlsh -h YOUR_YSQL_IP # default database & user = yugabyte
+    \l
     CREATE DATABASE sample;
     \c sample
     CREATE TABLE carts(id serial PRIMARY KEY, userid VARCHAR(50), productid VARCHAR(50), quantity integer);
