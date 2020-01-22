@@ -86,6 +86,12 @@ We offer two installation methods:
      here](https://docs.docker.com/docker-for-mac/kubernetes/).
    - [skaffold]( https://skaffold.dev/docs/install/) (ensure version ≥v0.20)
    - Helm v3 (https://helm.sh/docs/intro/install/)
+   - YugabyteDB install local CLI and add to PATH (https://docs.yugabyte.com/latest/quick-start/install/)
+   ```sh
+   wget https://downloads.yugabyte.com/yugabyte-2.0.10.0-darwin.tar.gz
+   tar xvfz yugabyte-2.0.10.0-darwin.tar.gz
+   PATH=PATH:yugabyte-2.0.10.0/bin
+   ```
 
 1. Launch “Docker for Desktop”. Go to Preferences:
 
@@ -119,7 +125,7 @@ We offer two installation methods:
     helm search yugabytedb
     helm install yb-demo yugabytedb/yugabyte -f https://raw.githubusercontent.com/YugaByte/charts/master/stable/yugabyte/expose-all.yaml --version 2.0.9 --wait
     ```
-    
+
 1.  Prep your YugabyteDB instance with the following DDL
 
     ```sh
