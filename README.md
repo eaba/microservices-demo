@@ -63,7 +63,7 @@ Find **Protocol Buffers Descriptions** at the [`./pb` directory](./pb).
 
 ## Installation
 
-We offer three installation methods:
+We offer two installation methods:
 
 1. **Running locally with “Docker for Desktop”** (~20 minutes) You will build
    and deploy microservices images to a single-node Kubernetes cluster running
@@ -73,10 +73,6 @@ We offer three installation methods:
    upload and deploy the container images to a Kubernetes cluster on Google
    Cloud.
 
-3. **Using pre-built container images:** (~10 minutes, you will still need to
-   follow one of the steps above up until `skaffold run` command). With this
-   option, you will use pre-built container images that are available publicly,
-   instead of building them yourself, which takes a long time).
 
 ### Option 1: Running locally with “Docker for Desktop”
 
@@ -89,6 +85,7 @@ We offer three installation methods:
    - Docker for Desktop (Mac/Windows): It provides Kubernetes support as [noted
      here](https://docs.docker.com/docker-for-mac/kubernetes/).
    - [skaffold]( https://skaffold.dev/docs/install/) (ensure version ≥v0.20)
+   - Helm v3 (https://helm.sh/docs/intro/install/)
 
 1. Launch “Docker for Desktop”. Go to Preferences:
 
@@ -111,7 +108,26 @@ We offer three installation methods:
 > 💡 Recommended if you're using Google Cloud Platform and want to try it on
 > a realistic cluster.
 
-1.  Install tools specified in the previous section (Docker, kubectl, skaffold)
+1.  Install tools specified in the previous section (Docker, kubectl, skaffold, helm, YugabyteDB command line)
+
+1.  Prep your cluster and deploy a YugabyteDB cluster via Helm
+
+    ```sh
+    kubectl create namespace yb-demo
+    kubectl config set-context --namespace yb-demo --current
+    helm repo add yugabytedb https://charts.yugabyte.com
+    helm search yugabytedb
+    helm install yb-demo yugabytedb/yugabyte -f https://raw.githubusercontent.com/YugaByte/charts/master/stable/yugabyte/expose-all.yaml --version 2.0.9 --wait
+    ```
+    
+1.  Prep your YugabyteDB instance with the following DDL
+
+    ```sh
+    bin/ysqlsh -h YOUR_YSQL_IP # default database & user = yugabyte
+    CREATE DATABASE sample;
+    \c sample
+    CREATE TABLE carts(id serial PRIMARY KEY, userid VARCHAR(50), productid VARCHAR(50), quantity integer);
+    ```
 
 1.  Create a Google Kubernetes Engine cluster and make sure `kubectl` is pointing
     to the cluster.
@@ -167,36 +183,13 @@ We offer three installation methods:
     are seeing this, run `kubectl get service frontend-external -o=yaml | kubectl apply -f-`
     to trigger load balancer reconfiguration.
 
-### Option 3: Using Pre-Built Container Images
-
-> 💡 Recommended if you want to deploy the app faster in fewer steps to an
-> existing cluster.
-
-**NOTE:** If you need to create a Kubernetes cluster locally or on the cloud,
-follow "Option 1" or "Option 2" until you reach the `skaffold run` step.
-
-This option offers you pre-built public container images that are easy to deploy
-by deploying the [release manifest](./release) directly to an existing cluster.
-
-**Prerequisite**: a running Kubernetes cluster (either local or on cloud).
-
-1. Clone this repository, and go to the repository directory
-1. Run `kubectl apply -f ./release/kubernetes-manifests.yaml` to deploy the app.
-1. Run `kubectl get pods` to see pods are in a Ready state.
-1. Find the IP address of your application, then visit the application on your
-   browser to confirm installation.
-
-   ```sh
-   kubectl get service/frontend-external
-   ```
-
 ### (Work in Progress) Deploying on a Istio-installed GKE cluster
 
 > **Note:** you followed GKE deployment steps above, run `skaffold delete` first
 > to delete what's deployed. Enabling Istio-on-GKE sidecar injection may not allow
 > previous deployed versions to be re-deployed until it is disabled and removed.
 
-1. Create a GKE cluster (described in "Option 2").
+1. Create a GKE cluster and deploy YugabyteDB (described in "Option 2").
 
 1. Use [Istio on GKE add-on](https://cloud.google.com/istio/docs/istio-on-gke/installing)
    to install Istio to your existing GKE cluster.
@@ -208,7 +201,7 @@ by deploying the [release manifest](./release) directly to an existing cluster.
        --istio-config=auth=MTLS_PERMISSIVE
    ```
 
-   > NOTE: If you need to enable `MTLS_STRICT` mode, you will need to update
+   > NOTE: MTLS_STRICT is unsupported at this time. If you would like to enable `MTLS_STRICT` mode, you will need to update
    > several manifest files:
    >
    > - `kubernetes-manifests/frontend.yaml`: delete "livenessProbe" and
