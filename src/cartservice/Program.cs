@@ -13,8 +13,8 @@
 // limitations under the License.
 
 ﻿using System;
-//npgsql added to test YBDB connectivity
-using Npgsql;
+// npgsql added to test YBDB connectivity
+// using Npgsql;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,7 +29,7 @@ namespace cartservice
     class Program
     {
         const string CART_SERVICE_ADDRESS = "LISTEN_ADDR";
-        const string REDIS_ADDRESS = "REDIS_ADDR";
+        const string YSQL_ADDRESS = "YSQL_ADDR";
         const string CART_SERVICE_PORT = "PORT";
 
         [Verb("start", HelpText = "Starts the server listening on provided port")]
@@ -41,8 +41,8 @@ namespace cartservice
             [Option('p', "port", HelpText = "The port on for running the server")]
             public int Port { get; set; }
 
-            [Option('r', "redis", HelpText = "The ip of redis cache")]
-            public string Redis { get; set; }
+            [Option('r', "ysql", HelpText = "The ip of YSQL")]
+            public string YSQL { get; set; }
         }
 
         static object StartServer(string host, int port, ICartStore cartStore)
@@ -138,17 +138,17 @@ namespace cartservice
 
                             // Set redis cache host (hostname+port)
                             ICartStore cartStore;
-                            string redis = ReadRedisAddress(options.Redis);
+                            string YSQL = ReadYSQLAddress(options.YSQL);
                             // Extract and set YBDB host from kubernetes-manifest cartservice.yaml
-                            // string ysql = ReadRedisAddress(options.Redis);
+                            // string ysql = ReadYSQLAddress(options.Redis);
 
                             // Redis was specified via command line or environment variable
-                            if (!string.IsNullOrEmpty(redis))
+                            if (!string.IsNullOrEmpty(YSQL))
                             {
                                 // If you want to start cart store using local cache in process, you can replace the following line with this:
                                 // cartStore = new LocalCartStore();
                                 // Redis cart store
-                                cartStore = new RedisCartStore(redis);
+                                cartStore = new YSQLCartStore(YSQL);
                                 // YSQL cart store
                                 // cartStore = new SQLCartStore(ysql);
                                 return StartServer(hostname, port, cartStore);
@@ -170,18 +170,18 @@ namespace cartservice
             }
         }
 
-        private static string ReadRedisAddress(string address)
+        private static string ReadYSQLAddress(string address)
         {
             if (!string.IsNullOrEmpty(address))
             {
                 return address;
             }
 
-            Console.WriteLine($"Reading redis cache address from environment variable {REDIS_ADDRESS}");
-            string redis = Environment.GetEnvironmentVariable(REDIS_ADDRESS);
-            if (!string.IsNullOrEmpty(redis))
+            Console.WriteLine($"Reading YSQL cache address from environment variable {YSQL_ADDRESS}");
+            string ysql = Environment.GetEnvironmentVariable(YSQL_ADDRESS);
+            if (!string.IsNullOrEmpty(ysql))
             {
-                return redis;
+                return ysql;
             }
 
             return null;
