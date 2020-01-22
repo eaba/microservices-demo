@@ -215,13 +215,13 @@ We offer two installation methods:
    > - `kubernetes-manifests/loadgenerator.yaml`: delete "initContainers" field.
 
 1. (Optional) Enable Stackdriver Tracing/Logging with Istio Stackdriver Adapter
-   by [following this guide](https://cloud.google.com/istio/docs/istio-on-gke/installing#enabling_tracing_and_logging).
+   by [following this guide](https://cloud.google.com/istio/docs/istio-on-gke/installing#enabling_tracing_and_logging). Work still needs to be done for Prometheus monitoring to update metrics here: https://cloud.google.com/istio/docs/istio-on-gke/installing
 
-1. Install the automatic sidecar injection (annotate the `default` namespace
+1. Install the automatic sidecar injection (annotate the `yb-demo` namespace
    with the label):
 
    ```sh
-   kubectl label namespace default istio-injection=enabled
+   kubectl label namespace yb-demo istio-injection=enabled
    ```
 
 1. Apply the manifests in [`./istio-manifests`](./istio-manifests) directory.
