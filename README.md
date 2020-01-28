@@ -116,6 +116,23 @@ We offer two installation methods:
 
 1.  Install tools specified in the previous section (Docker, kubectl, skaffold, helm, YugabyteDB command line)
 
+1.  Create a Google Kubernetes Engine cluster and make sure `kubectl` is pointing
+    to the cluster.
+
+    ```sh
+    gcloud services enable container.googleapis.com
+    ```
+
+    ```sh
+    gcloud container clusters create demo --enable-autoupgrade \
+        --enable-autoscaling --min-nodes=3 --max-nodes=10 --num-nodes=5 --zone=us-central1-a
+    ```
+
+    ```
+    kubectl get nodes
+    ```
+
+
 1.  Prep your cluster and deploy a YugabyteDB cluster via Helm
 
     ```sh
@@ -135,22 +152,6 @@ We offer two installation methods:
     CREATE DATABASE sample;
     \c sample
     CREATE TABLE carts(id serial PRIMARY KEY, userid VARCHAR(50), productid VARCHAR(50), quantity integer);
-    ```
-
-1.  Create a Google Kubernetes Engine cluster and make sure `kubectl` is pointing
-    to the cluster.
-
-    ```sh
-    gcloud services enable container.googleapis.com
-    ```
-
-    ```sh
-    gcloud container clusters create demo --enable-autoupgrade \
-        --enable-autoscaling --min-nodes=3 --max-nodes=10 --num-nodes=5 --zone=us-central1-a
-    ```
-
-    ```
-    kubectl get nodes
     ```
 
 1.  Enable Google Container Registry (GCR) on your GCP project and configure the
