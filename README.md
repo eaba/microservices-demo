@@ -63,21 +63,12 @@ Find **Protocol Buffers Descriptions** at the [`./pb` directory](./pb).
 
 ## Installation
 
-We offer two installation methods:
+You can deploy the microservices-demo application stack and YugabyteDB to any Kubernetes environment. For reference, install steps will be provided for GKE.
 
-1. **Running locally with “Docker for Desktop”** (~20 minutes) You will build
-   and deploy microservices images to a single-node Kubernetes cluster running
-   on your development machine.
-
-2. **Running on Google Kubernetes Engine (GKE)”** (~30 minutes) You will build,
+1. **Running on Google Kubernetes Engine (GKE)”** (~30 minutes) You will build,
    upload and deploy the container images to a Kubernetes cluster on Google
    Cloud.
 
-
-### Option 1: Running locally with “Docker for Desktop”
-
-> 💡 Recommended if you're planning to develop the application or giving it a
-> try on your local cluster.
 
 1. Install tools to run a Kubernetes cluster locally:
 
@@ -92,29 +83,6 @@ We offer two installation methods:
    tar xvfz yugabyte-2.0.10.0-darwin.tar.gz
    PATH=PATH:yugabyte-2.0.10.0/bin
    ```
-
-1. Launch “Docker for Desktop”. Go to Preferences:
-
-   - choose “Enable Kubernetes”,
-   - set CPUs to at least 3, and Memory to at least 6.0 GiB
-   - on the "Disk" tab, set at least 32 GB disk space
-
-1. Run `kubectl get nodes` to verify you're connected to “Kubernetes on Docker”.
-
-1. Run `skaffold run` (first time will be slow, it can take ~20 minutes).
-   This will build and deploy the application. If you need to rebuild the images
-   automatically as you refactor the code, run `skaffold dev` command.
-
-1. Run `kubectl get pods` to verify the Pods are ready and running. The
-   application frontend should be available at http://localhost:80 on your
-   machine.
-
-### Option 2: Running on Google Kubernetes Engine (GKE)
-
-> 💡 Recommended if you're using Google Cloud Platform and want to try it on
-> a realistic cluster.
-
-1.  Install tools specified in the previous section (Docker, kubectl, skaffold, helm, YugabyteDB command line)
 
 1.  Create a Google Kubernetes Engine cluster and make sure `kubectl` is pointing
     to the cluster.
@@ -131,7 +99,6 @@ We offer two installation methods:
     ```
     kubectl get nodes
     ```
-
 
 1.  Prep your cluster and deploy a YugabyteDB cluster via Helm
 
