@@ -30,5 +30,5 @@ spec:
         - name: GF_INSTALL_PLUGINS
           value: "grafana-kubernetes-app"
       volumes:
-      - name: grafana-storage
+      - name: grafana-claim
         emptyDir: {} 
