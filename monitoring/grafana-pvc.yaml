@@ -5,7 +5,7 @@ metadata:
   labels:
     component: grafana
   name: grafana-claim
-  namespace: istio-system
+  namespace: yb-demo
 spec:
   accessModes:
   - ReadWriteOnce
